@@ -1,10 +1,19 @@
-version: '3.8'
-
+version: "3.9"
 services:
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    environment:
-      PMA_HOST: mysql_db
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "8082:80"
+  web:
+    volumes: 
+      - .:/app
+      - ./php.ini:/usr/local/etc/php/php.ini
+    build: .
+    restart: unless-stopped
+    networks:
+      - proxy
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.filament.rule=Host(`filament.ecoward.me`)"
+        - "traefik.http.routers.filament.entrypoints=websecure"
+        - "traefik.docker.network=proxy"
+        - "traefik.http.services.filament.loadbalancer.server.port=8000"
+networks:
+  proxy:
+    

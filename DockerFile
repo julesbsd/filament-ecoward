@@ -1,0 +1,35 @@
+FROM php:zts-bookworm
+
+RUN apt-get update && apt-get install -y \
+    libicu-dev \
+    libpq-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    nodejs \
+    npm \
+    && docker-php-ext-install \
+    intl \
+    pdo \
+    pdo_mysql \
+    pgsql \
+    zip
+
+RUN groupadd -g 1004 deploy && useradd -g deploy -u 1003 -d /app jules
+
+# USER jules
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+RUN git clone https://github.com/julesbsd/filament-ecoward.git
+
+WORKDIR /app
+
+
+EXPOSE 5173 8000
+
+RUN chown -R 1003:1004 .
+
+CMD composer install && npm install && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan key:generate &&  php artisan storage:link &&  composer install && cp .env.example .env && php artisan serve --host=0.0.0.0 --port=8000
